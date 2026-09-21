@@ -1,0 +1,5 @@
+# EvilKDC requirements  --  pip install -r requirements.txt
+impacket>=0.11.0
+pyasn1>=0.5.0
+# requests is only used by --check --proxy (the end-to-end redirect test)
+requests>=2.28.0
