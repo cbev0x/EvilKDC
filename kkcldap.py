@@ -1,23 +1,4 @@
 #!/usr/bin/env python3
-"""
-kkcldap.py -- NetLogon CLDAP responder for the KDC Proxy SSRF-ceiling test -- reflect.lab TOOL-22
-
-DsGetDcName does not trust DNS alone: after the SRV/A lookup it sends a connectionless LDAP (CLDAP,
-UDP 389) NetLogon ping to the candidate DC and requires a valid NETLOGON_SAM_LOGON_RESPONSE_EX naming
-the domain. This is the gate that decides whether the KDC Proxy's relay reaches only real internal
-forests or an arbitrary attacker-controlled host. This tool answers that ping for a domain we control,
-so that a proxy pointed at target-domain=<attacker domain> locates "our DC" and relays the Kerberos to
-our KDC (run fakedc on tcp/udp 88 at the same IP).
-
-Setup for the test:
-  1. attacker domain resolvable from the proxy's resolver (conditional forwarder to a DNS server here,
-     or a lab zone) with SRV records _ldap._tcp.dc._msdcs.<domain> and _kerberos._tcp.dc._msdcs.<domain>
-     -> kdc.<domain>, and A kdc.<domain> -> this host.
-  2. run this responder (needs root for udp/389) and fakedc (the KDC) on this host.
-  3. drive: kkdcp/kkspray/kkoracle with --realm <attacker domain>; watch SRV02 KdcProxy 309 resolve
-     to kdc.<domain> and the request arrive at fakedc.
-If that lands, the relay is an unauthenticated SSRF to an arbitrary attacker KDC. LAB USE.
-"""
 import argparse, socket, struct, uuid, sys
 
 # ---- minimal BER for the CLDAP (LDAP-over-UDP) response ----
