@@ -1,32 +1,4 @@
 #!/usr/bin/env python3
-"""
-EvilKDC -- rogue KDC for the Windows KDC Proxy (MS-KKDCP) attack surface
-
-AUTHORIZED TESTING ONLY. See README.md for the full attack chain, prerequisites, and blast-radius
-notes. This tool is the *capture* half of the chain; it does NOT perform the L2 network takeover --
-that is a deliberate, separately-run, SCOPED step (mitm6), by design, so the dangerous part stays in
-the operator's hands with proper filtering rather than baked into a one-click footgun.
-
-What this single terminal provides:
-  * a scoped authoritative DNS responder (udp/53) that answers the DC-locator queries for ONE target
-    realm -- the _msdcs SRV records and the DC-host A record -- pointing them at this host. It refuses
-    everything outside the target realm, so it does not disrupt unrelated name resolution.
-  * a NetLogon CLDAP responder (udp/389) that satisfies the KDC Proxy's DsGetDcName validation.
-  * a KDC capture listener (tcp/88) that elicits PA-ENC-TIMESTAMP pre-auth and writes hashcat lines.
-
-How victim traffic reaches it (the prerequisite -- NOT done by this tool):
-  the KDC Proxy's host must resolve the target realm's DC via this box. That requires resolver-position
-  over the proxy (a DHCP/DHCPv6-assigned DNS you control, a compromised resolver, admin on the proxy,
-  or an L2 takeover with mitm6). The floor is UNAUTHENTICATED + network-adjacent -- no AD rights.
-  For the L2 case run mitm6 in a SEPARATE terminal, SCOPED to the target so you don't nuke the segment:
-      sudo mitm6 -d <realm> -hw <proxy-fqdn> -i <iface>
-  then point mitm6's victims at this host as DNS (see README) or use a resolver you control.
-
-Captured PA-ENC-TIMESTAMP cracks OFFLINE, no lockout (the real KDC never sees a guess):
-  hashcat -m 7500 (RC4) | -m 19800 (AES128) | -m 19900 (AES256)
-
-Ships with kkcldap.py (imported for the CLDAP responder helpers).
-"""
 import argparse, socket, struct, sys, threading, datetime, os, time
 
 try:
